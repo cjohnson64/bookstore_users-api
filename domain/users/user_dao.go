@@ -9,6 +9,7 @@ import (
 )
 
 const(
+	indexUniqueEmail = "email_UNIQUE"
 	queryInsertUser = "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
 )
 
@@ -46,7 +47,7 @@ func (user *User) Save() *errors.RestErr {
 
 	insertResult, err :=  stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
 	if err != nil {
-		if strings.Contains(err.Error(), "email_UNIQUE"){
+		if strings.Contains(err.Error(), indexUniqueEmail){
 			return errors.NewBadRequestError(
 				fmt.Sprintf("email %s already exists", user.Email))
 		}
