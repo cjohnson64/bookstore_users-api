@@ -12,6 +12,16 @@ import (
 	"strconv"
 )
 
+func getUserId(userIdParam string) (int64, *errors.RestErr){
+	userId, userErr := strconv.ParseInt(userIdParam, 10, 64)
+	if userErr != nil {
+		return 0, errors.NewBadRequestError("user id should be a number")
+	}
+	return userId, nil
+}
+
+
+
 func CreateUser(c *gin.Context) {
 	var user users.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -29,10 +39,9 @@ func CreateUser(c *gin.Context) {
 }
 
 func GetUser(c *gin.Context) {
-	userId, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	if userErr != nil {
-		err := errors.NewBadRequestError("user ID should be a number")
-		c.JSON(err.Status, err)
+	userId, idErr := getUserId(c.Param("user_id"))
+	if idErr != nil {
+		c.JSON(idErr.Status, idErr)
 		return
 	}
 	
@@ -40,10 +49,45 @@ func GetUser(c *gin.Context) {
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
+
 	}
 	c.JSON(http.StatusCreated, user)
 }
 
 func SearchUser(c *gin.Context) {
 	c.String(http.StatusNotImplemented, "implement me!")
+}
+
+func UpdateUser(c *gin.Context) {
+
+	userId, userErr := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if userErr != nil {
+		err := errors.NewBadRequestError("user ID should be a number")
+		c.JSON(err.Status, err)
+		return
+	}
+
+	var user users.User
+	if err := c.ShouldBindJSON(&user); err != nil {
+		restErr := errors.NewBadRequestError("invalid json body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	user.Id = userId
+	//if the http method is partial it will pass this value to the update user method so it
+	//knows to use the patch version of the method where it does a partial update. 
+	isPartial := c.Request.Method == http.MethodPatch
+
+	result, err:= services.UpdateUser(isPartial, user)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+
+func DeleteUser(c *gin.Context) {
+	
 }
