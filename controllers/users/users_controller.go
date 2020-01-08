@@ -111,5 +111,4 @@ func Search(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, users)
-	
 }

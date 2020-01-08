@@ -5,6 +5,8 @@ import (
 	"github.com/crjohnson1208/bookstore_users-api/utils/date_utils"
 	"github.com/crjohnson1208/bookstore_users-api/utils/errors"
 	"github.com/crjohnson1208/bookstore_users-api/utils/mysql_utils"
+
+	"fmt"
 )
 
 const (
@@ -86,7 +88,7 @@ func (user *User) Delete() (*errors.RestErr) {
 	
 }
 
-func (user *User) FindByStatus(status string) ([]User, errors.RestErr) {
+func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 	stmt, err := users_db.Client.Prepare(queryFindUserByStatus) 
 	if err != nil {
 		return nil, errors.NewInternalServerError(err.Error())
