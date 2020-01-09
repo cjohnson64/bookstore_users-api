@@ -2,7 +2,6 @@ package users
 
 import (
 	"github.com/crjohnson1208/bookstore_users-api/datasources/mysql/users_db"
-	"github.com/crjohnson1208/bookstore_users-api/utils/date_utils"
 	"github.com/crjohnson1208/bookstore_users-api/utils/errors"
 	"github.com/crjohnson1208/bookstore_users-api/utils/mysql_utils"
 
@@ -10,13 +9,13 @@ import (
 )
 
 const (
-	indexUniqueEmail 		= "email_UNIQUE"
-	errorNoRows      		= "no rows in result set"
-	queryInsertUser  		= "INSERT INTO users(first_name, last_name, email, date_created) VALUES(?, ?, ?, ?);"
-	queryGetUser     		= "SELECT id, first_name, last_name, email, date_created FROM users WHERE id=?;"
-	queryUpdateUser  		= "UPDATE users SET first_name=?, last_name=?, email=? where id=?"
-	queryDeleteUser  		= "DELETE FROM users where id=?;"
-	queryFindUserByStatus 	= "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status=?;"
+	indexUniqueEmail      = "email_UNIQUE"
+	errorNoRows           = "no rows in result set"
+	queryInsertUser       = "INSERT INTO users(first_name, last_name, email, date_created, password, status) VALUES(?, ?, ?, ?, ?, ?);"
+	queryGetUser          = "SELECT id, first_name, last_name, email, date_created FROM users WHERE id=?;"
+	queryUpdateUser       = "UPDATE users SET first_name=?, last_name=?, email=? where id=?"
+	queryDeleteUser       = "DELETE FROM users where id=?;"
+	queryFindUserByStatus = "SELECT id, first_name, last_name, email, date_created, status FROM users WHERE status=?;"
 )
 
 //Get function is retrieving only by ID
@@ -44,9 +43,7 @@ func (user *User) Save() *errors.RestErr {
 	}
 	defer stmt.Close()
 
-	user.DateCreated = date_utils.GetNowString()
-
-	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	insertResult, saveErr := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Password, user.Status)
 	if saveErr != nil {
 		return mysql_utils.ParseError(saveErr)
 	}
@@ -74,7 +71,7 @@ func (user *User) Update() *errors.RestErr {
 	return nil
 }
 
-func (user *User) Delete() (*errors.RestErr) {
+func (user *User) Delete() *errors.RestErr {
 	stmt, err := users_db.Client.Prepare(queryDeleteUser)
 	if err != nil {
 		return errors.NewInternalServerError(err.Error())
@@ -85,11 +82,11 @@ func (user *User) Delete() (*errors.RestErr) {
 		return mysql_utils.ParseError(err)
 	}
 	return nil
-	
+
 }
 
 func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
-	stmt, err := users_db.Client.Prepare(queryFindUserByStatus) 
+	stmt, err := users_db.Client.Prepare(queryFindUserByStatus)
 	if err != nil {
 		return nil, errors.NewInternalServerError(err.Error())
 	}
@@ -99,7 +96,7 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 	if err != nil {
 		return nil, errors.NewInternalServerError(err.Error())
 	}
-	defer rows.Close() 
+	defer rows.Close()
 
 	results := make([]User, 0)
 	for rows.Next() {
@@ -111,7 +108,7 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestErr) {
 	}
 
 	if len(results) == 0 {
-		return nil, errors.NewNotFoundError(fmt.Sprintf("no users matching status %s", status ))
+		return nil, errors.NewNotFoundError(fmt.Sprintf("no users matching status %s", status))
 	}
 	return results, nil
 }

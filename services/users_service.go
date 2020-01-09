@@ -4,6 +4,7 @@ import (
 	"github.com/crjohnson1208/bookstore_users-api/domain/users"
 	"github.com/crjohnson1208/bookstore_users-api/utils/date_utils"
 	"github.com/crjohnson1208/bookstore_users-api/utils/errors"
+	"github.com/crjohnson1208/bookstore_users-api/utils/crypto_utils"
 )
 
 func CreateUser(user users.User) (*users.User, *errors.RestErr) {
@@ -13,6 +14,7 @@ func CreateUser(user users.User) (*users.User, *errors.RestErr) {
 
 	user.Status = users.StatusActive
 	user.DateCreated = date_utils.GetNowDBFormat()
+	user.Password = crypto_utils.GetMd5(user.Password)
 	if err := user.Save(); err != nil {
 		return nil, err
 	}
@@ -44,6 +46,15 @@ func UpdateUser(isPartial bool, user users.User) (*users.User, *errors.RestErr) 
 		if user.Email != "" {
 			current.Email = user.Email
 		}
+		if user.Status != "" {
+			current.Status = user.Status
+		}
+		if user.Password != "" {
+			current.Password = user.Password
+		}
+		if user.DateCreated != "" {
+			current.DateCreated = user.DateCreated
+		}
 	} else {
 		current.FirstName = user.FirstName
 		current.LastName = user.LastName
@@ -63,6 +74,5 @@ func DeleteUser(userId int64) *errors.RestErr {
 
 func FindByStatus(status string) ([]users.User, *errors.RestErr) {
 	dao := &users.User{}
-	users, err := dao.FindByStatus(status)
-	return users, err
+	return dao.FindByStatus(status)
 }
